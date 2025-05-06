@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YZTA Hackathon - Nesne Tespiti</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #eef2f7; color: #333; display: flex; justify-content: center; padding-top: 30px; padding-bottom: 30px;}
+        .container { background-color: #fff; padding: 30px 40px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); width: 90%; max-width: 900px; }
+        h1 { color: #1a237e; text-align: center; margin-bottom: 25px; font-weight: 600; }
+        h3 { color: #3949ab; margin-top: 30px; border-bottom: 2px solid #c5cae9; padding-bottom: 8px; font-weight: 500;}
+        form { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;}
+        input[type="file"] { border: 1px solid #ced4da; padding: 10px; border-radius: 5px; width: 100%; max-width: 450px; background-color: #fff; }
+        input[type="submit"] { background-color: #3f51b5; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: 500; transition: background-color 0.3s ease, box-shadow 0.3s ease; }
+        input[type="submit"]:hover { background-color: #303f9f; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 20px; }
+        .result-item img, .result-item video { max-width: 100%; height: auto; border: 1px solid #e0e0e0; border-radius: 8px; display: block; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+        .message { padding: 15px; margin-bottom: 20px; border-radius: 5px; text-align: center; font-size: 1em; border: 1px solid transparent;}
+        .message.success { background-color: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+        .message.error { background-color: #ffebee; color: #c62828; border-color: #ef9a9a; }
+        .message.info { background-color: #e3f2fd; color: #1565c0; border-color: #90caf9; }
+        .message.warning { background-color: #fffde7; color: #f57f17; border-color: #fff59d; }
+        .gemini-output { background-color: #f1f8e9; border: 1px solid #dcedc8; padding: 15px; border-radius: 5px; white-space: pre-wrap; margin-top: 15px; font-family: Consolas, 'Courier New', monospace; font-size: 0.95em; line-height: 1.6;}
+        .summary-list { list-style: none; padding-left: 0; }
+        .summary-list li { background-color: #f5f5f5; margin-bottom: 5px; padding: 8px 12px; border-radius: 4px; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hackathon Nesne Tespiti & Gemini Tanımlama</h1>
+
+        {% if message %}
+        <div class="message {{ message_type }}">
+            {{ message }}
+        </div>
+        {% endif %}
+
+        <form action="/upload/" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept="image/*,video/*" required>
+            <input type="submit" value="Yükle, Tespit Et ve Tanımla">
+        </form>
+
+        <div class="results-grid">
+            {% if uploaded_file_name %}
+            <div class="result-item">
+                <h3>Orijinal Yüklenen</h3>
+                {% if uploaded_file_type == 'image' %}
+                    <img src="{{ url_for('static_files', path=uploaded_file_name) }}" alt="Yüklenen Orijinal Resim">
+                {% elif uploaded_file_type == 'video' %}
+                    <video controls width="100%">
+                        <source src="{{ url_for('static_files', path=uploaded_file_name) }}">
+                        Tarayıcınız video etiketini desteklemiyor.
+                    </video>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if detection_result_name %}
+            <div class="result-item">
+                <h3>Tespit Sonucu (İşlenmiş)</h3>
+                {% if detected_file_type == 'image' %}
+                    <img src="{{ url_for('static_files', path=detection_result_name) }}" alt="Tespit Edilmiş Resim">
+                {% elif detected_file_type == 'video' %}
+                    <video controls width="100%">
+                        <source src="{{ url_for('static_files', path=detection_result_name) }}" type="video/mp4">
+                        Tarayıcınız video etiketini desteklemiyor.
+                    </video>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        {% if detection_summary %}
+            <h3>Tespit Edilen Nesneler (Özet)</h3>
+            <ul class="summary-list">
+                {% for item in detection_summary %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if gemini_info %}
+            <h3>Gemini ile Ekolojik Analiz ve Öğrenme Notu</h3> {# <-- BAŞLIK DEĞİŞTİ #}
+            <div class="gemini-output">{{ gemini_info }}</div>
+        {% endif %}
+
+
+    </div> 
+</body>
+</html>
